@@ -67,19 +67,18 @@ export function generateKumikoSVG(
   const canvasWidth = maxCanvasWidth;
   const canvasHeight = gridLines.length * triangleHeight;
 
+  // Calculate default and configured thickness values
+  const skeletonThickness =
+    config.thickness?.skeleton ?? config.sideLength * 0.04;
+  const leafThickness = config.thickness?.leaf ?? config.sideLength * 0.015;
+
   let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}" width="${canvasWidth}" height="${canvasHeight}" style="background-color:var(--kumiko-bg, ${config.colors.background})">\n`;
 
   svgContent += `
   <style>
-    :root { --kumiko-skeleton: ${config.colors.skeleton}; --kumiko-leaf: ${
-    config.colors.leaf
-  }; }
-    .skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${
-      config.sideLength * 0.04
-    }; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .leaf { stroke: var(--kumiko-leaf); stroke-width: ${
-      config.sideLength * 0.015
-    }; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    :root { --kumiko-skeleton: ${config.colors.skeleton}; --kumiko-leaf: ${config.colors.leaf}; }
+    .skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${skeletonThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .leaf { stroke: var(--kumiko-leaf); stroke-width: ${leafThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   `;
 
@@ -122,19 +121,24 @@ export function generateKumikoSVG(
             leaves: leafPaths,
             skeletonColor,
             leafColor,
+            skeletonThickness: patternSkeletonThickness,
+            leafThickness: patternLeafThickness,
           } = patternRenderer(triangleGeometry);
 
-          // パターン固有の色がなければ設定のデフォルト色を使用
+          // パターン固有の値がなければ設定のデフォルト値を使用
           const finalSkeletonColor = skeletonColor || config.colors.skeleton;
           const finalLeafColor = leafColor || config.colors.leaf;
+          const finalSkeletonThickness =
+            patternSkeletonThickness ?? skeletonThickness;
+          const finalLeafThickness = patternLeafThickness ?? leafThickness;
 
           const groupTag = elementClass ? `<g class="${elementClass}">` : `<g>`;
           // Draw leaf first, then skeleton on top
           svgContent += `  ${groupTag}<path class="leaf" d="${leafPaths.join(
             " "
-          )}" style="stroke:${finalLeafColor};" /><path class="skeleton" d="${skeletonPaths.join(
+          )}" style="stroke:${finalLeafColor};stroke-width:${finalLeafThickness};" /><path class="skeleton" d="${skeletonPaths.join(
             " "
-          )}" style="stroke:${finalSkeletonColor};" /></g>\n`;
+          )}" style="stroke:${finalSkeletonColor};stroke-width:${finalSkeletonThickness};" /></g>\n`;
         };
 
         // 左端

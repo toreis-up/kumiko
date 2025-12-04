@@ -18,12 +18,16 @@ export type PatternRenderer = (geom: TriangleGeometry) => {
   leaves: string[];
   skeletonColor?: string;
   leafColor?: string;
+  skeletonThickness?: number;
+  leafThickness?: number;
 };
 
 // Common pattern options
 export interface BasePatternOptions {
   skeletonColor?: string;
   leafColor?: string;
+  skeletonThickness?: number;
+  leafThickness?: number;
 }
 
 // Pattern-specific options

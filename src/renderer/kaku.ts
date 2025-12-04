@@ -7,7 +7,13 @@ import { Geom } from "../utils";
 export const createKakuPattern = (
   options: KakuOptions = {}
 ): PatternRenderer => {
-  const { skeletonColor, leafColor, ratio = 0.65 } = options;
+  const {
+    skeletonColor,
+    leafColor,
+    ratio = 0.65,
+    skeletonThickness,
+    leafThickness,
+  } = options;
 
   return ({ p1, p2, p3, center }) => {
     // 1. 内側の頂点を計算 (重心に向かって縮小)
@@ -34,6 +40,8 @@ export const createKakuPattern = (
       ],
       skeletonColor,
       leafColor,
+      skeletonThickness,
+      leafThickness,
     };
   };
 };

@@ -116,6 +116,16 @@ async function main() {
       type: "string",
       default: DEFAULT_CONFIG.colors.background,
     })
+    .option("skeleton-thickness", {
+      description:
+        "Skeleton stroke thickness (as a multiplier of side-length, e.g., 0.04 for default)",
+      type: "number",
+    })
+    .option("leaf-thickness", {
+      description:
+        "Leaf stroke thickness (as a multiplier of side-length, e.g., 0.015 for default)",
+      type: "number",
+    })
     .help()
     .alias("help", "h")
     .parse();
@@ -165,6 +175,10 @@ async function main() {
       skeleton: argv.skeletonColor,
       leaf: argv.leafColor,
       background: argv.backgroundColor,
+    },
+    thickness: {
+      skeleton: argv.skeletonThickness,
+      leaf: argv.leafThickness,
     },
   };
 

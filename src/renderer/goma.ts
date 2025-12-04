@@ -7,7 +7,13 @@ import { Geom } from "../utils";
 export const createGomaPattern = (
   options: GomaOptions = {}
 ): PatternRenderer => {
-  const { skeletonColor, leafColor, showCenterLine = false } = options;
+  const {
+    skeletonColor,
+    leafColor,
+    showCenterLine = false,
+    skeletonThickness,
+    leafThickness,
+  } = options;
 
   return ({ p1, p2, p3, center }) => {
     const leaves = [];
@@ -20,6 +26,8 @@ export const createGomaPattern = (
       leaves: leaves,
       skeletonColor,
       leafColor,
+      skeletonThickness,
+      leafThickness,
     };
   };
 };

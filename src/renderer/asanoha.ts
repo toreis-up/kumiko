@@ -7,7 +7,8 @@ import { Geom } from "../utils";
 export const createAsanohaPattern = (
   options: AsanohaOptions = {}
 ): PatternRenderer => {
-  const { skeletonColor, leafColor } = options;
+  const { skeletonColor, leafColor, skeletonThickness, leafThickness } =
+    options;
 
   return ({ p1, p2, p3, center }) => ({
     skeleton: [Geom.triangle(p1, p2, p3)],
@@ -18,5 +19,7 @@ export const createAsanohaPattern = (
     ],
     skeletonColor,
     leafColor,
+    skeletonThickness,
+    leafThickness,
   });
 };

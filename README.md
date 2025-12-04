@@ -1,5 +1,7 @@
 # kumiko-generator
 
+![KUMIKO](./asset/kumiko.svg)
+
 麻の葉模様などの日本の伝統的な組子（くみこ）文様を SVG で生成するツールです。
 
 ## 概要
@@ -56,6 +58,11 @@ pnpm dev -i <入力ファイル> -o <出力ファイル>
 - `--skeleton-color <hex>`: スケルトン（骨組み）の色（デフォルト: #8d6e63）
 - `--leaf-color <hex>`: リーフ（葉）の色（デフォルト: #8d6e63）
 - `--background-color <hex>`: 背景色（デフォルト: #33312eff）
+
+#### 線の太さ設定
+
+- `--skeleton-thickness <number>`: スケルトンの線の太さ（デフォルト: side-length × 0.04）
+- `--leaf-thickness <number>`: リーフの線の太さ（デフォルト: side-length × 0.015）
 
 ### 入力ファイル形式
 
@@ -144,7 +151,9 @@ A,A,A,A
   "type": "asanoha",
   "options": {
     "skeletonColor": "#色コード",
-    "leafColor": "#色コード"
+    "leafColor": "#色コード",
+    "skeletonThickness": 4,
+    "leafThickness": 2
   }
 }
 ```
@@ -157,7 +166,9 @@ A,A,A,A
   "options": {
     "showCenterLine": true|false,
     "skeletonColor": "#色コード",
-    "leafColor": "#色コード"
+    "leafColor": "#色コード",
+    "skeletonThickness": 4,
+    "leafThickness": 2
   }
 }
 ```
@@ -170,12 +181,16 @@ A,A,A,A
   "options": {
     "ratio": 0.0~1.0,
     "skeletonColor": "#色コード",
-    "leafColor": "#色コード"
+    "leafColor": "#色コード",
+    "skeletonThickness": 4,
+    "leafThickness": 2
   }
 }
 ```
 
 - `ratio`: 内枠の縮小率（デフォルト: 0.65）
+- `skeletonThickness`: スケルトンの線の太さ（オプション）
+- `leafThickness`: リーフの線の太さ（オプション）
 
 ## 使用例
 
@@ -209,7 +224,17 @@ pnpm dev \
   --background-color "#000000"
 ```
 
-### 例 5: すべてのオプションを組み合わせ
+### 例 5: 線の太さをカスタマイズ
+
+```bash
+pnpm dev \
+  -i sample/pattern.txt \
+  -o thick-lines.svg \
+  --skeleton-thickness 6 \
+  --leaf-thickness 3
+```
+
+### 例 6: すべてのオプションを組み合わせ
 
 ```bash
 pnpm dev \
@@ -219,7 +244,9 @@ pnpm dev \
   --repeat-x 4 \
   --repeat-y 3 \
   --side-length 120 \
-  --background-color "#fafafa"
+  --background-color "#fafafa" \
+  --skeleton-thickness 5 \
+  --leaf-thickness 2.5
 ```
 
 ## コマンドリファレンス

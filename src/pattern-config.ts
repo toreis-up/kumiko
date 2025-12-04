@@ -68,6 +68,8 @@ export function buildPatternRegistry(
         registry[charKey] = createAsanohaPattern({
           skeletonColor,
           leafColor,
+          skeletonThickness: options.skeletonThickness,
+          leafThickness: options.leafThickness,
         });
         break;
 
@@ -76,6 +78,8 @@ export function buildPatternRegistry(
           skeletonColor,
           leafColor,
           showCenterLine: options.showCenterLine,
+          skeletonThickness: options.skeletonThickness,
+          leafThickness: options.leafThickness,
         });
         break;
 
@@ -84,6 +88,8 @@ export function buildPatternRegistry(
           skeletonColor,
           leafColor,
           ratio: options.ratio,
+          skeletonThickness: options.skeletonThickness,
+          leafThickness: options.leafThickness,
         });
         break;
 

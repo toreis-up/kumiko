@@ -2,6 +2,7 @@ export interface KumikoConfig {
   sideLength: number;
   outputFilename: string;
   colors: { skeleton: string; leaf: string; background: string };
+  thickness?: { skeleton?: number; leaf?: number };
 }
 
 // Pattern character to pattern type mapping
@@ -13,6 +14,8 @@ export interface PatternCharacterConfig {
       showCenterLine?: boolean;
       skeletonColor?: string;
       leafColor?: string;
+      skeletonThickness?: number;
+      leafThickness?: number;
     };
   };
 }
