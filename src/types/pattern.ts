@@ -34,7 +34,7 @@ export interface BasePatternOptions {
 export interface AsanohaOptions extends BasePatternOptions {}
 
 export interface GomaOptions extends BasePatternOptions {
-  showCenterLine?: boolean;
+  inset?: number;
 }
 
 export interface KakuOptions extends BasePatternOptions {

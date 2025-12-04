@@ -164,7 +164,8 @@ A,A,A,A
 {
   "type": "goma",
   "options": {
-    "showCenterLine": true|false,
+    "scale": 0.33,
+    "innerRatio": 0.7,
     "skeletonColor": "#色コード",
     "leafColor": "#色コード",
     "skeletonThickness": 4,
@@ -172,6 +173,9 @@ A,A,A,A
   }
 }
 ```
+
+- `scale`: 正六角形のスケール（0 ～ 1、デフォルト: 0.33）
+- `innerRatio`: 内側の正六角形のスケール（0 ～ 1、デフォルト: 0.7）
 
 ##### kaku（角麻）
 
@@ -308,8 +312,8 @@ kumiko-generator/
 | `A`  | Asanoha            | 麻の葉                 |
 | `K`  | Kaku (ratio: 0.65) | 角麻（標準）           |
 | `k`  | Kaku (ratio: 0.8)  | 角麻（バリエーション） |
-| `G`  | Goma               | 胡麻（枠のみ）         |
-| `.`  | Goma               | 胡麻（枠のみ）         |
+| `G`  | Goma (scale: 0.33) | 胡麻（大）             |
+| `.`  | Goma (scale: 0.25) | 胡麻（小）             |
 
 カスタム記号はパターン設定ファイルで定義できます。
 

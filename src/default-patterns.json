@@ -6,7 +6,7 @@
     "G": {
       "type": "goma",
       "options": {
-        "showCenterLine": false
+        "inset": 0.3
       }
     },
     "K": {
@@ -19,12 +19,6 @@
       "type": "kaku",
       "options": {
         "ratio": 0.8
-      }
-    },
-    ".": {
-      "type": "goma",
-      "options": {
-        "showCenterLine": false
       }
     }
   }
