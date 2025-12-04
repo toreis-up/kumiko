@@ -1,29 +1,9 @@
-import type { PatternRenderer, KumikoConfig } from "./types";
+import type { KumikoConfig } from "./types";
 import type { PatternCharacterConfig } from "./types/config";
 import { writeFileSync } from "node:fs";
-import {
-  createAsanohaPattern,
-  createGomaPattern,
-  createKakuPattern,
-} from "./renderer";
 import { buildPatternRegistry } from "./pattern-config";
 import { Geom } from "./utils";
-
-/**
- * Create default pattern registry with specified colors
- */
-function createDefaultPatternRegistry(
-  skeletonColor: string,
-  leafColor: string
-): Record<string, PatternRenderer> {
-  return {
-    A: createAsanohaPattern({ skeletonColor, leafColor }),
-    G: createGomaPattern({ skeletonColor, leafColor, showCenterLine: false }), // 枠のみ
-    K: createKakuPattern({ skeletonColor, leafColor, ratio: 0.65 }), // 標準的な角麻
-    k: createKakuPattern({ skeletonColor, leafColor, ratio: 0.8 }), // 枠が細い角麻 (バリエーション)
-    ".": createGomaPattern({ skeletonColor, leafColor, showCenterLine: false }),
-  };
-}
+import defaultPatterns from "./default-patterns.json";
 
 /**
  * グリッドデータを基にSVGコンテンツを生成
@@ -38,13 +18,11 @@ export function generateKumikoSVG(
   const halfSideLength = sideLength / 2;
 
   // Create pattern registry with configured colors and patterns
-  const patternRegistry = patternConfig
-    ? buildPatternRegistry(
-        patternConfig,
-        config.colors.skeleton,
-        config.colors.leaf
-      )
-    : createDefaultPatternRegistry(config.colors.skeleton, config.colors.leaf);
+  const patternRegistry = buildPatternRegistry(
+    patternConfig || (defaultPatterns.characters as PatternCharacterConfig),
+    config.colors.skeleton,
+    config.colors.leaf
+  );
 
   // 1. キャンバス幅を計算
   let maxCanvasWidth = 0;

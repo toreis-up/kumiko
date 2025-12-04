@@ -1,11 +1,7 @@
 import { readFileSync } from "node:fs";
 import { extname } from "node:path";
 import type { PatternCharacterConfig, PatternConfigFile } from "./types/config";
-import {
-  createAsanohaPattern,
-  createGomaPattern,
-  createKakuPattern,
-} from "./renderer";
+import { PATTERN_FACTORIES } from "./renderer";
 import type { PatternRenderer } from "./types";
 
 /**
@@ -49,6 +45,7 @@ export function loadPatternConfig(filePath: string): PatternCharacterConfig {
 
 /**
  * Build pattern registry from character configuration
+ * Uses PATTERN_FACTORIES to get factory functions by ID
  */
 export function buildPatternRegistry(
   charConfig: PatternCharacterConfig,
@@ -60,44 +57,23 @@ export function buildPatternRegistry(
   for (const [charKey, config] of Object.entries(charConfig)) {
     const { type, options = {} } = config;
 
-    const skeletonColor = options.skeletonColor || defaultSkeletonColor;
-    const leafColor = options.leafColor || defaultLeafColor;
-
-    switch (type) {
-      case "asanoha":
-        registry[charKey] = createAsanohaPattern({
-          skeletonColor,
-          leafColor,
-          skeletonThickness: options.skeletonThickness,
-          leafThickness: options.leafThickness,
-        });
-        break;
-
-      case "goma":
-        registry[charKey] = createGomaPattern({
-          skeletonColor,
-          leafColor,
-          showCenterLine: options.showCenterLine,
-          skeletonThickness: options.skeletonThickness,
-          leafThickness: options.leafThickness,
-        });
-        break;
-
-      case "kaku":
-        registry[charKey] = createKakuPattern({
-          skeletonColor,
-          leafColor,
-          ratio: options.ratio,
-          skeletonThickness: options.skeletonThickness,
-          leafThickness: options.leafThickness,
-        });
-        break;
-
-      default:
-        throw new Error(
-          `Unknown pattern type: ${type} for character: ${charKey}`
-        );
+    // Get factory metadata by pattern type ID
+    const factoryMetadata = PATTERN_FACTORIES[type];
+    if (!factoryMetadata) {
+      throw new Error(
+        `Unknown pattern type: ${type} for character: ${charKey}`
+      );
     }
+
+    // Apply default colors
+    const mergedOptions = {
+      ...options,
+      skeletonColor: options.skeletonColor || defaultSkeletonColor,
+      leafColor: options.leafColor || defaultLeafColor,
+    };
+
+    // Call factory via metadata
+    registry[charKey] = factoryMetadata.factory(mergedOptions as any);
   }
 
   return registry;

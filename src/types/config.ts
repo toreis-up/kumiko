@@ -1,3 +1,10 @@
+import type {
+  AsanohaOptions,
+  GomaOptions,
+  KakuOptions,
+  PATTERN_TYPES,
+} from "./pattern";
+
 export interface KumikoConfig {
   sideLength: number;
   outputFilename: string;
@@ -5,19 +12,21 @@ export interface KumikoConfig {
   thickness?: { skeleton?: number; leaf?: number };
 }
 
-// Pattern character to pattern type mapping
+// Pattern character to pattern type mapping - using pattern type IDs
 export interface PatternCharacterConfig {
-  [charKey: string]: {
-    type: "asanoha" | "goma" | "kaku";
-    options?: {
-      ratio?: number;
-      showCenterLine?: boolean;
-      skeletonColor?: string;
-      leafColor?: string;
-      skeletonThickness?: number;
-      leafThickness?: number;
-    };
-  };
+  [charKey: string]:
+    | {
+        type: typeof PATTERN_TYPES.ASANOHA;
+        options?: AsanohaOptions;
+      }
+    | {
+        type: typeof PATTERN_TYPES.GOMA;
+        options?: GomaOptions;
+      }
+    | {
+        type: typeof PATTERN_TYPES.KAKU;
+        options?: KakuOptions;
+      };
 }
 
 // Full pattern configuration file format

@@ -1,0 +1,31 @@
+{
+  "characters": {
+    "A": {
+      "type": "asanoha"
+    },
+    "G": {
+      "type": "goma",
+      "options": {
+        "showCenterLine": false
+      }
+    },
+    "K": {
+      "type": "kaku",
+      "options": {
+        "ratio": 0.65
+      }
+    },
+    "k": {
+      "type": "kaku",
+      "options": {
+        "ratio": 0.8
+      }
+    },
+    ".": {
+      "type": "goma",
+      "options": {
+        "showCenterLine": false
+      }
+    }
+  }
+}

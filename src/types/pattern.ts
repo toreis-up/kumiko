@@ -40,3 +40,32 @@ export interface GomaOptions extends BasePatternOptions {
 export interface KakuOptions extends BasePatternOptions {
   ratio?: number;
 }
+
+// Pattern factory function type
+export type PatternFactory<T extends BasePatternOptions = BasePatternOptions> =
+  (options?: T) => PatternRenderer;
+
+// Pattern type identifiers - acts as literal types for pattern names
+export const PATTERN_TYPES = {
+  ASANOHA: "asanoha",
+  GOMA: "goma",
+  KAKU: "kaku",
+} as const;
+
+export type PatternTypeId = (typeof PATTERN_TYPES)[keyof typeof PATTERN_TYPES];
+
+// Pattern factory metadata with ID
+export interface PatternFactoryMetadata<
+  T extends BasePatternOptions = BasePatternOptions
+> {
+  id: PatternTypeId;
+  name: string;
+  factory: PatternFactory<T>;
+}
+
+// Strict pattern factory registry type - indexed by ID
+export interface PatternFactoryRegistry {
+  [PATTERN_TYPES.ASANOHA]: PatternFactoryMetadata<AsanohaOptions>;
+  [PATTERN_TYPES.GOMA]: PatternFactoryMetadata<GomaOptions>;
+  [PATTERN_TYPES.KAKU]: PatternFactoryMetadata<KakuOptions>;
+}
