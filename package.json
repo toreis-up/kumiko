@@ -1,0 +1,28 @@
+{
+  "name": "@toreis/kumiko",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsdown src/index.ts"
+  },
+  "bin": {
+    "kumiko": "bin/kumiko.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/yargs": "^17.0.35",
+    "ts-node": "^10.9.2",
+    "tsdown": "0.17.0-beta.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "yargs": "^18.0.0"
+  }
+}

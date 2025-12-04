@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "lib": ["DOM", "ES2020"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,43 @@
+{
+  "characters": {
+    "A": {
+      "type": "asanoha",
+      "options": {
+        "skeletonColor": "#8d6e63",
+        "leafColor": "#8d2e23"
+      }
+    },
+    "K": {
+      "type": "kaku",
+      "options": {
+        "ratio": 0.65,
+        "skeletonColor": "#8d6e63",
+        "leafColor": "#8d6e63"
+      }
+    },
+    "k": {
+      "type": "kaku",
+      "options": {
+        "ratio": 0.8,
+        "skeletonColor": "#8d6e63",
+        "leafColor": "#8d6e63"
+      }
+    },
+    "G": {
+      "type": "goma",
+      "options": {
+        "showCenterLine": false,
+        "skeletonColor": "#8d6e63",
+        "leafColor": "#8d6e63"
+      }
+    },
+    ".": {
+      "type": "goma",
+      "options": {
+        "showCenterLine": false,
+        "skeletonColor": "#8d6e63",
+        "leafColor": "#8d6e63"
+      }
+    }
+  }
+}
