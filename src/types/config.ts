@@ -2,6 +2,7 @@ import type {
   AsanohaOptions,
   GomaOptions,
   KakuOptions,
+  BlankOptions,
   PATTERN_TYPES,
 } from "./pattern";
 
@@ -26,6 +27,10 @@ export interface PatternCharacterConfig {
     | {
         type: typeof PATTERN_TYPES.KAKU;
         options?: KakuOptions;
+      }
+    | {
+        type: typeof PATTERN_TYPES.BLANK;
+        options?: BlankOptions;
       };
 }
 

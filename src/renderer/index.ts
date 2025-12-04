@@ -3,10 +3,12 @@ import { PATTERN_TYPES } from "../types/pattern";
 import { createAsanohaPattern } from "./asanoha";
 import { createGomaPattern } from "./goma";
 import { createKakuPattern } from "./kaku";
+import { createBlankPattern } from "./blank";
 
 export { createAsanohaPattern } from "./asanoha";
 export { createGomaPattern } from "./goma";
 export { createKakuPattern } from "./kaku";
+export { createBlankPattern } from "./blank";
 export { PATTERN_TYPES } from "../types/pattern";
 
 /**
@@ -28,5 +30,10 @@ export const PATTERN_FACTORIES: PatternFactoryRegistry = {
     id: PATTERN_TYPES.KAKU,
     name: "Kaku-Asanoha (Angular Hemp Leaf)",
     factory: createKakuPattern,
+  },
+  [PATTERN_TYPES.BLANK]: {
+    id: PATTERN_TYPES.BLANK,
+    name: "Blank (Empty)",
+    factory: createBlankPattern,
   },
 } as const;

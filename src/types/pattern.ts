@@ -41,6 +41,9 @@ export interface KakuOptions extends BasePatternOptions {
   ratio?: number;
 }
 
+// Blank pattern options (no special options)
+export interface BlankOptions extends BasePatternOptions {}
+
 // Pattern factory function type
 export type PatternFactory<T extends BasePatternOptions = BasePatternOptions> =
   (options?: T) => PatternRenderer;
@@ -50,6 +53,7 @@ export const PATTERN_TYPES = {
   ASANOHA: "asanoha",
   GOMA: "goma",
   KAKU: "kaku",
+  BLANK: "blank",
 } as const;
 
 export type PatternTypeId = (typeof PATTERN_TYPES)[keyof typeof PATTERN_TYPES];
@@ -68,4 +72,5 @@ export interface PatternFactoryRegistry {
   [PATTERN_TYPES.ASANOHA]: PatternFactoryMetadata<AsanohaOptions>;
   [PATTERN_TYPES.GOMA]: PatternFactoryMetadata<GomaOptions>;
   [PATTERN_TYPES.KAKU]: PatternFactoryMetadata<KakuOptions>;
+  [PATTERN_TYPES.BLANK]: PatternFactoryMetadata<BlankOptions>;
 }
