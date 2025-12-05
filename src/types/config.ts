@@ -4,6 +4,7 @@ import type {
   KakuOptions,
   BlankOptions,
   PATTERN_TYPES,
+  SakuraOptions,
 } from "./pattern";
 
 export interface KumikoConfig {
@@ -31,6 +32,10 @@ export interface PatternCharacterConfig {
     | {
         type: typeof PATTERN_TYPES.BLANK;
         options?: BlankOptions;
+      }
+    | {
+        type: typeof PATTERN_TYPES.SAKURA;
+        options?: SakuraOptions;
       };
 }
 

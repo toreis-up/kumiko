@@ -2,7 +2,7 @@ import type { KumikoConfig } from "./types";
 import type { PatternCharacterConfig } from "./types/config";
 import { writeFileSync } from "node:fs";
 import { buildPatternRegistry } from "./pattern-config";
-import { Geom } from "./utils";
+import { Geom, normalizeLeafPath, resolveStyle, getStyleKey } from "./utils";
 import defaultPatterns from "./default-patterns.json";
 
 /**
@@ -50,13 +50,25 @@ export function generateKumikoSVG(
     config.thickness?.skeleton ?? config.sideLength * 0.04;
   const leafThickness = config.thickness?.leaf ?? config.sideLength * 0.015;
 
+  // Style class management for atomic CSS
+  const styleClassMap = new Map<string, string>();
+  let styleClassCounter = 0;
+
+  const getOrCreateStyleClass = (styleKey: string): string => {
+    if (!styleClassMap.has(styleKey)) {
+      const className = `leaf-${styleClassCounter}`;
+      styleClassMap.set(styleKey, className);
+      styleClassCounter++;
+    }
+    return styleClassMap.get(styleKey)!;
+  };
+
   let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}" width="${canvasWidth}" height="${canvasHeight}" style="background-color:var(--kumiko-bg, ${config.colors.background})">\n`;
 
   svgContent += `
   <style>
     :root { --kumiko-skeleton: ${config.colors.skeleton}; --kumiko-leaf: ${config.colors.leaf}; }
     .skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${skeletonThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .leaf { stroke: var(--kumiko-leaf); stroke-width: ${leafThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   `;
 
@@ -105,18 +117,58 @@ export function generateKumikoSVG(
 
           // パターン固有の値がなければ設定のデフォルト値を使用
           const finalSkeletonColor = skeletonColor || config.colors.skeleton;
-          const finalLeafColor = leafColor || config.colors.leaf;
           const finalSkeletonThickness =
             patternSkeletonThickness ?? skeletonThickness;
-          const finalLeafThickness = patternLeafThickness ?? leafThickness;
+
+          // Pattern defaults for leaf style resolution
+          const patternDefaults = {
+            color: leafColor,
+            thickness: patternLeafThickness,
+          };
+          const configDefaults = {
+            color: config.colors.leaf,
+            thickness: leafThickness,
+          };
+
+          // Group leaves by resolved style
+          const leafsByStyle = new Map<string, string[]>();
+
+          leafPaths.forEach((leaf) => {
+            const normalized = normalizeLeafPath(leaf);
+            const resolvedStyle = resolveStyle(
+              normalized.style,
+              patternDefaults,
+              configDefaults
+            );
+            const styleKey = getStyleKey(resolvedStyle);
+            const className = getOrCreateStyleClass(styleKey);
+
+            if (!leafsByStyle.has(className)) {
+              leafsByStyle.set(className, []);
+            }
+            leafsByStyle.get(className)!.push(normalized.path);
+          });
 
           const groupTag = elementClass ? `<g class="${elementClass}">` : `<g>`;
-          // Draw leaf first, then skeleton on top
-          svgContent += `  ${groupTag}<path class="leaf" d="${leafPaths.join(
-            " "
-          )}" style="stroke:${finalLeafColor};stroke-width:${finalLeafThickness};" /><path class="skeleton" d="${skeletonPaths.join(
-            " "
-          )}" style="stroke:${finalSkeletonColor};stroke-width:${finalSkeletonThickness};" /></g>\n`;
+          svgContent += `  ${groupTag}`;
+
+          // Draw leaves by style class
+          leafsByStyle.forEach((paths, className) => {
+            if (paths.length > 0) {
+              svgContent += `<path class="${className}" d="${paths.join(
+                " "
+              )}" />`;
+            }
+          });
+
+          // Draw skeleton on top
+          if (skeletonPaths.length > 0) {
+            svgContent += `<path class="skeleton" d="${skeletonPaths.join(
+              " "
+            )}" style="stroke:${finalSkeletonColor};stroke-width:${finalSkeletonThickness};" />`;
+          }
+
+          svgContent += `</g>\n`;
         };
 
         // 左端
@@ -136,6 +188,16 @@ export function generateKumikoSVG(
       });
     });
   });
+
+  // Add dynamically generated style classes
+  if (styleClassMap.size > 0) {
+    svgContent += `  <style>\n`;
+    styleClassMap.forEach((className, styleKey) => {
+      const [thicknessStr, color] = styleKey.split("|");
+      svgContent += `    .${className} { stroke: ${color}; stroke-width: ${thicknessStr}; fill: none; stroke-linecap: round; stroke-linejoin: round; }\n`;
+    });
+    svgContent += `  </style>\n`;
+  }
 
   svgContent += `</svg>`;
   return svgContent;

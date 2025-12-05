@@ -1,48 +1,67 @@
-import { PatternRenderer, GomaOptions } from "../types";
+import { PatternRenderer, SakuraOptions, LeafPath } from "../types";
 import { Geom } from "../utils";
 
-/**
- * 胡麻 (Goma) パターン生成ロジック
- * skeleton の三角形の内側に、平行な線を3本描画
- */
-export const createGomaPattern = (
-  options: GomaOptions = {}
+export const createSakuraPattern = (
+  options: SakuraOptions = {}
 ): PatternRenderer => {
   const {
     skeletonColor,
     leafColor,
     inset = 0.3,
+    flowerThickness = 2,
+    flowerColor = "#FFB7C5",
     skeletonThickness,
     leafThickness,
   } = options;
 
   return ({ p1, p2, p3, center, clipBoundary }) => {
     const skeleton: string[] = [];
-    const leaves: string[] = [];
+    const leaves: LeafPath[] = [];
 
     // 外枠（三角形）を描画
     skeleton.push(Geom.triangle(p1, p2, p3));
 
-    // 内側の平行な三角形を計算（中心に向かって縮小）
-    const ip1 = Geom.lerp(p1, center, inset);
-    const ip2 = Geom.lerp(p2, center, inset);
-    const ip3 = Geom.lerp(p3, center, inset);
+    const ip1 = Geom.lerp(center, p1, 1 - inset);
+    const ip2 = Geom.lerp(center, p2, 1 - inset);
+    const ip3 = Geom.lerp(center, p3, 1 - inset);
 
-    // 内側三角形の各辺を延長して skeleton との交点を求める
-    // 辺 ip1-ip2 を延長 → p2-p3 と p3-p1 と交わる
-    const line1_int1 = findLineSegmentIntersection(ip1, ip2, p2, p3);
-    const line1_int2 = findLineSegmentIntersection(ip1, ip2, p3, p1);
+    // 中心から頂点への細い線（デフォルトの leaf スタイル）をクリップしながら追加
+    const addThinLeaf = (
+      from: { x: number; y: number },
+      to: { x: number; y: number }
+    ) => {
+      if (clipBoundary && clipBoundary.type === "vertical") {
+        const clipped = clipLine(from, to, clipBoundary.x, clipBoundary.side);
+        if (clipped) {
+          leaves.push(Geom.line(clipped[0], clipped[1]));
+        }
+      } else {
+        leaves.push(Geom.line(from, to));
+      }
+    };
 
-    // 辺 ip2-ip3 を延長 → p3-p1 と p1-p2 と交わる
-    const line2_int1 = findLineSegmentIntersection(ip2, ip3, p3, p1);
-    const line2_int2 = findLineSegmentIntersection(ip2, ip3, p1, p2);
+    addThinLeaf(center, ip1);
+    addThinLeaf(center, ip2);
+    addThinLeaf(center, ip3);
 
-    // 辺 ip3-ip1 を延長 → p1-p2 と p2-p3 と交わる
-    const line3_int1 = findLineSegmentIntersection(ip3, ip1, p1, p2);
-    const line3_int2 = findLineSegmentIntersection(ip3, ip1, p2, p3);
+    const lip1 = Geom.lerp(center, p1, -(1 - inset) * 2);
+    const lip2 = Geom.lerp(center, p2, -(1 - inset) * 2);
+    const lip3 = Geom.lerp(center, p3, -(1 - inset) * 2);
 
-    // 交点が見つかった場合のみ leaf を描画（clipBoundary があればクリップ）
-    const addLeaf = (
+    const line1_int1 = findLineSegmentIntersection(lip1, lip2, p2, p3);
+    const line1_int2 = findLineSegmentIntersection(lip1, lip2, p3, p1);
+    const line2_int1 = findLineSegmentIntersection(lip2, lip3, p3, p1);
+    const line2_int2 = findLineSegmentIntersection(lip2, lip3, p1, p2);
+    const line3_int1 = findLineSegmentIntersection(lip3, lip1, p1, p2);
+    const line3_int2 = findLineSegmentIntersection(lip3, lip1, p2, p3);
+
+    // 花びらの太い線（カスタムスタイル）をクリップしながら追加
+    const flowerStyle = {
+      thickness: flowerThickness * 2,
+      color: flowerColor,
+    };
+
+    const addFlowerLeaf = (
       pt1: { x: number; y: number } | null,
       pt2: { x: number; y: number } | null
     ) => {
@@ -51,16 +70,22 @@ export const createGomaPattern = (
       if (clipBoundary && clipBoundary.type === "vertical") {
         const clipped = clipLine(pt1, pt2, clipBoundary.x, clipBoundary.side);
         if (clipped) {
-          leaves.push(Geom.line(clipped[0], clipped[1]));
+          leaves.push({
+            path: Geom.line(clipped[0], clipped[1]),
+            style: flowerStyle,
+          });
         }
       } else {
-        leaves.push(Geom.line(pt1, pt2));
+        leaves.push({
+          path: Geom.line(pt1, pt2),
+          style: flowerStyle,
+        });
       }
     };
 
-    addLeaf(line1_int1, line1_int2);
-    addLeaf(line2_int1, line2_int2);
-    addLeaf(line3_int1, line3_int2);
+    addFlowerLeaf(line1_int1, line1_int2);
+    addFlowerLeaf(line2_int1, line2_int2);
+    addFlowerLeaf(line3_int1, line3_int2);
 
     return {
       skeleton,
@@ -119,11 +144,6 @@ function clipLine(
   } else {
     return [intersection, p2];
   }
-}
-
-/**
- * 内側の点から skeleton の対辺への垂直線との交点を計算
- * @param innerPoint 内側の点
 }
 
 /**

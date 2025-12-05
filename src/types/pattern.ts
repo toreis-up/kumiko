@@ -1,10 +1,19 @@
 export type Point = { x: number; y: number };
 
+// Clipping boundary for edge triangles
+export interface ClipBoundary {
+  type: "vertical"; // 垂直線でクリップ
+  x: number; // クリップラインのx座標
+  side: "left" | "right"; // どちら側を残すか
+}
+
 export interface TriangleGeometry {
   p1: Point;
   p2: Point;
   p3: Point;
   center: Point;
+  partShape?: "FULL" | "HALF_LEFT" | "HALF_RIGHT";
+  clipBoundary?: ClipBoundary;
 }
 
 export interface RenderContext {
@@ -13,9 +22,23 @@ export interface RenderContext {
   leafColor: string;
 }
 
+// Style specification for individual paths
+export interface StyleSpec {
+  thickness?: number;
+  color?: string;
+}
+
+// Leaf path can be a simple string or an object with style
+export type LeafPath =
+  | string
+  | {
+      path: string;
+      style?: StyleSpec;
+    };
+
 export type PatternRenderer = (geom: TriangleGeometry) => {
   skeleton: string[];
-  leaves: string[];
+  leaves: LeafPath[];
   skeletonColor?: string;
   leafColor?: string;
   skeletonThickness?: number;
@@ -41,6 +64,12 @@ export interface KakuOptions extends BasePatternOptions {
   ratio?: number;
 }
 
+export interface SakuraOptions extends BasePatternOptions {
+  flowerThickness?: number;
+  flowerColor?: string;
+  inset?: number;
+}
+
 // Blank pattern options (no special options)
 export interface BlankOptions extends BasePatternOptions {}
 
@@ -54,6 +83,7 @@ export const PATTERN_TYPES = {
   GOMA: "goma",
   KAKU: "kaku",
   BLANK: "blank",
+  SAKURA: "sakura",
 } as const;
 
 export type PatternTypeId = (typeof PATTERN_TYPES)[keyof typeof PATTERN_TYPES];
@@ -73,4 +103,5 @@ export interface PatternFactoryRegistry {
   [PATTERN_TYPES.GOMA]: PatternFactoryMetadata<GomaOptions>;
   [PATTERN_TYPES.KAKU]: PatternFactoryMetadata<KakuOptions>;
   [PATTERN_TYPES.BLANK]: PatternFactoryMetadata<BlankOptions>;
+  [PATTERN_TYPES.SAKURA]: PatternFactoryMetadata<SakuraOptions>;
 }

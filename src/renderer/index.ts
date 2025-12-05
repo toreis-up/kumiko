@@ -4,11 +4,13 @@ import { createAsanohaPattern } from "./asanoha";
 import { createGomaPattern } from "./goma";
 import { createKakuPattern } from "./kaku";
 import { createBlankPattern } from "./blank";
+import { createSakuraPattern } from "./sakura";
 
 export { createAsanohaPattern } from "./asanoha";
 export { createGomaPattern } from "./goma";
 export { createKakuPattern } from "./kaku";
 export { createBlankPattern } from "./blank";
+export { createSakuraPattern } from "./sakura";
 export { PATTERN_TYPES } from "../types/pattern";
 
 /**
@@ -35,5 +37,10 @@ export const PATTERN_FACTORIES: PatternFactoryRegistry = {
     id: PATTERN_TYPES.BLANK,
     name: "Blank (Empty)",
     factory: createBlankPattern,
+  },
+  [PATTERN_TYPES.SAKURA]: {
+    id: PATTERN_TYPES.SAKURA,
+    name: "Sakura (Cherry Blossom)",
+    factory: createSakuraPattern,
   },
 } as const;
