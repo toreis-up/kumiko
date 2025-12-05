@@ -72,6 +72,14 @@ export function generateKumikoSVG(
   </style>
   `;
 
+  // Global path collectors - accumulate all paths by style
+  const globalLeafsByStyle = new Map<string, string[]>();
+  const globalSkeletonPaths: string[] = [];
+  let globalSkeletonStyle = {
+    color: config.colors.skeleton,
+    thickness: skeletonThickness,
+  };
+
   // 2. 描画ループ
   gridLines.forEach((lineStr, lineIndex) => {
     const wallSegments = lineStr.split("|");
@@ -96,8 +104,7 @@ export function generateKumikoSVG(
         // 共通描画処理ヘルパー
         const renderTrianglePart = (
           partShape: "FULL" | "HALF_LEFT" | "HALF_RIGHT",
-          xOffset: number,
-          elementClass?: string
+          xOffset: number
         ) => {
           const triangleGeometry = Geom.calculateTriangle(
             partShape,
@@ -130,9 +137,7 @@ export function generateKumikoSVG(
             thickness: leafThickness,
           };
 
-          // Group leaves by resolved style
-          const leafsByStyle = new Map<string, string[]>();
-
+          // Group leaves by resolved style and add to global collectors
           leafPaths.forEach((leaf) => {
             const normalized = normalizeLeafPath(leaf);
             const resolvedStyle = resolveStyle(
@@ -143,44 +148,35 @@ export function generateKumikoSVG(
             const styleKey = getStyleKey(resolvedStyle);
             const className = getOrCreateStyleClass(styleKey);
 
-            if (!leafsByStyle.has(className)) {
-              leafsByStyle.set(className, []);
+            if (!globalLeafsByStyle.has(className)) {
+              globalLeafsByStyle.set(className, []);
             }
-            leafsByStyle.get(className)!.push(normalized.path);
+            globalLeafsByStyle.get(className)!.push(normalized.path);
           });
 
-          const groupTag = elementClass ? `<g class="${elementClass}">` : `<g>`;
-          svgContent += `  ${groupTag}`;
-
-          // Draw leaves by style class
-          leafsByStyle.forEach((paths, className) => {
-            if (paths.length > 0) {
-              svgContent += `<path class="${className}" d="${paths.join(
-                " "
-              )}" />`;
-            }
-          });
-
-          // Draw skeleton on top
+          // Add skeleton paths to global collector
           if (skeletonPaths.length > 0) {
-            svgContent += `<path class="skeleton" d="${skeletonPaths.join(
-              " "
-            )}" style="stroke:${finalSkeletonColor};stroke-width:${finalSkeletonThickness};" />`;
+            globalSkeletonPaths.push(...skeletonPaths);
+            // Update skeleton style if pattern provides custom values
+            if (finalSkeletonColor !== globalSkeletonStyle.color) {
+              globalSkeletonStyle.color = finalSkeletonColor;
+            }
+            if (finalSkeletonThickness !== globalSkeletonStyle.thickness) {
+              globalSkeletonStyle.thickness = finalSkeletonThickness;
+            }
           }
-
-          svgContent += `</g>\n`;
         };
 
         // 左端
         if (charIndexInSegment === 0)
-          renderTrianglePart("HALF_LEFT", 0, "edge-L");
+          renderTrianglePart("HALF_LEFT", 0);
 
         // 本体
         renderTrianglePart("FULL", 0);
 
         // 右端
         if (charIndexInSegment === patternChars.length - 1) {
-          renderTrianglePart("HALF_RIGHT", halfSideLength, "edge-R");
+          renderTrianglePart("HALF_RIGHT", halfSideLength);
           xPosition += halfSideLength; // 右端分進める
         }
 
@@ -197,6 +193,21 @@ export function generateKumikoSVG(
       svgContent += `    .${className} { stroke: ${color}; stroke-width: ${thicknessStr}; fill: none; stroke-linecap: round; stroke-linejoin: round; }\n`;
     });
     svgContent += `  </style>\n`;
+  }
+
+  // Render all accumulated paths grouped by style
+  // Draw leaves by style class (all paths with same style in one <path> element)
+  globalLeafsByStyle.forEach((paths, className) => {
+    if (paths.length > 0) {
+      svgContent += `  <path class="${className}" d="${paths.join(" ")}" />\n`;
+    }
+  });
+
+  // Draw all skeleton paths in one <path> element
+  if (globalSkeletonPaths.length > 0) {
+    svgContent += `  <path class="skeleton" d="${globalSkeletonPaths.join(
+      " "
+    )}" style="stroke:${globalSkeletonStyle.color};stroke-width:${globalSkeletonStyle.thickness};" />\n`;
   }
 
   svgContent += `</svg>`;
