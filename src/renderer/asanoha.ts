@@ -21,5 +21,6 @@ export const createAsanohaPattern = (
     leafColor,
     skeletonThickness,
     leafThickness,
+    clipPath: Geom.triangle(p1, p2, p3),
   });
 };

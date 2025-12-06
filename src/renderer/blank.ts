@@ -10,7 +10,7 @@ export const createBlankPattern = (
   const { skeletonColor, leafColor, skeletonThickness, leafThickness } =
     options;
 
-  return ({ p1, p2, p3 }) => {
+  return ({  }) => {
     return {
       skeleton: [],
       leaves: [],
@@ -18,6 +18,7 @@ export const createBlankPattern = (
       leafColor,
       skeletonThickness,
       leafThickness,
+      clipPath: undefined,
     };
   };
 };

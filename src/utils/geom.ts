@@ -25,62 +25,78 @@ export const Geom = {
     const h = s * (Math.sqrt(3) / 2);
     let p1: Point, p2: Point, p3: Point, center: Point;
     let clipBoundary: ClipBoundary | undefined;
+    let fullP1: Point, fullP2: Point, fullP3: Point, fullCenter: Point;
+
+    if (direction === "UP") {
+      fullP1 = { x: x + s / 2, y: y };
+      fullP3 = { x: x, y: y + h };
+      fullP2 = { x: x + s, y: y + h };
+      fullCenter = { x: x + s / 2, y: y + (2 / 3) * h };
+    } else {
+      fullP1 = { x: x + s / 2, y: y + h };
+      fullP2 = { x: x, y: y };
+      fullP3 = { x: x + s, y: y };
+      fullCenter = { x: x + s / 2, y: y + (1 / 3) * h };
+    }
+
+    if (shapeType !== "FULL") {
+      const diff = shapeType === "HALF_RIGHT" ? -s / 2 : 0;
+      fullP1 = { x: fullP1.x + diff, y: fullP1.y };
+      fullP2 = { x: fullP2.x + diff, y: fullP2.y };
+      fullP3 = { x: fullP3.x + diff, y: fullP3.y };
+      fullCenter = { x: fullCenter.x + diff, y: fullCenter.y };
+    }
 
     if (shapeType === "FULL") {
       // 完全な三角形
       if (direction === "UP") {
         p1 = { x: x + s / 2, y: y };
-        p2 = { x: x, y: y + h };
-        p3 = { x: x + s, y: y + h };
+        p3 = { x: x, y: y + h };
+        p2 = { x: x + s, y: y + h };
         center = { x: x + s / 2, y: y + (2 / 3) * h };
       } else {
         // DOWN
-        p1 = { x: x, y: y };
-        p2 = { x: x + s, y: y };
-        p3 = { x: x + s / 2, y: y + h };
+        p1 = { x: x + s / 2, y: y + h };
+        p2 = { x: x, y: y };
+        p3 = { x: x + s, y: y };
         center = { x: x + s / 2, y: y + (1 / 3) * h };
       }
-    } else if (shapeType === "HALF_LEFT") {
-      // 左半分 → 左に完全な三角形があると想定
+    } else if (shapeType === "HALF_RIGHT") {
+      // 右半分残ってる三角
       if (direction === "UP") {
-        // HALF_LEFT + DOWN: 左下の直角三角形 |_\
-        // → 左側にある DOWN 三角形の右半分
-        p1 = { x: x - s / 2, y: y };
-        p2 = { x: x + s / 2, y: y };
-        p3 = { x: x, y: y + h };
-        center = { x: x, y: y + (1 / 3) * h };
-        clipBoundary = { type: "vertical", x: x, side: "right" };
-      } else {
-        // HALF_LEFT + UP: 左上の直角三角形
-        // → 左側にある UP 三角形の右半分
+        // 上向き
         p1 = { x: x, y: y };
-        p2 = { x: x - s / 2, y: y + h };
-        p3 = { x: x + s / 2, y: y + h };
+        p2 = { x: x + s / 2, y: y + h };
+        p3 = { x: x, y: y + h };
         center = { x: x, y: y + (2 / 3) * h };
-        clipBoundary = { type: "vertical", x: x, side: "right" };
+        clipBoundary = { type: "vertical", x: x, remainSide: "right" };
+      } else {
+        // 下向き
+        p1 = { x: x, y: y + h };
+        p2 = { x: x, y: y };
+        p3 = { x: x + s / 2, y: y };
+        center = { x: x, y: y + (1 / 3) * h };
+        clipBoundary = { type: "vertical", x: x, remainSide: "right" };
       }
     } else {
-      // HALF_RIGHT
-      // 右半分 → 右に完全な三角形があると想定
+      // 左半分残ってる三角
       if (direction === "UP") {
-        // HALF_RIGHT + DOWN: 右下の直角三角形 /_|
-        // → 右側にある DOWN 三角形の左半分
-        p1 = { x: x, y: y };
-        p2 = { x: x + s, y: y };
-        p3 = { x: x + s / 2, y: y + h };
-        center = { x: x + s / 2, y: y + (1 / 3) * h };
-        clipBoundary = { type: "vertical", x: x + s / 2, side: "left" };
-      } else {
-        // HALF_RIGHT + UP: 右上の直角三角形
-        // → 右側にある UP 三角形の左半分
+        // 上向き
         p1 = { x: x + s / 2, y: y };
-        p2 = { x: x, y: y + h };
-        p3 = { x: x + s, y: y + h };
+        p2 = { x: x + s / 2, y: y + h };
+        p3 = { x: x, y: y + h };
         center = { x: x + s / 2, y: y + (2 / 3) * h };
-        clipBoundary = { type: "vertical", x: x + s / 2, side: "left" };
+        clipBoundary = { type: "vertical", x: x + s / 2, remainSide: "left" };
+      } else {
+        // 下向き
+        p1 = { x: x + s / 2, y: y + h };
+        p2 = { x: x, y: y };
+        p3 = { x: x + s / 2, y: y };
+        center = { x: x + s / 2, y: y + (1 / 3) * h };
+        clipBoundary = { type: "vertical", x: x + s / 2, remainSide: "left" };
       }
     }
 
-    return { p1, p2, p3, center, partShape: shapeType, clipBoundary };
+    return { p1, p2, p3, center, partShape: shapeType, clipBoundary, full: { p1: fullP1, p2: fullP2, p3: fullP3, center: fullCenter } };
   },
 };

@@ -14,12 +14,16 @@ export const createSakuraPattern = (
     leafThickness,
   } = options;
 
-  return ({ p1, p2, p3, center, clipBoundary }) => {
+  return ({ p1, p2, p3, full, center, clipBoundary }) => {
     const skeleton: string[] = [];
     const leaves: LeafPath[] = [];
 
     // 外枠（三角形）を描画
     skeleton.push(Geom.triangle(p1, p2, p3));
+
+    const fp1 = full.p1;
+    const fp2 = full.p2;
+    const fp3 = full.p3;
 
     const ip1 = Geom.lerp(center, p1, 1 - inset);
     const ip2 = Geom.lerp(center, p2, 1 - inset);
@@ -31,7 +35,7 @@ export const createSakuraPattern = (
       to: { x: number; y: number }
     ) => {
       if (clipBoundary && clipBoundary.type === "vertical") {
-        const clipped = clipLine(from, to, clipBoundary.x, clipBoundary.side);
+        const clipped = clipLine(from, to, clipBoundary.x, clipBoundary.remainSide);
         if (clipped) {
           leaves.push(Geom.line(clipped[0], clipped[1]));
         }
@@ -44,9 +48,9 @@ export const createSakuraPattern = (
     addThinLeaf(center, ip2);
     addThinLeaf(center, ip3);
 
-    const lip1 = Geom.lerp(center, p1, -(1 - inset) * 2);
-    const lip2 = Geom.lerp(center, p2, -(1 - inset) * 2);
-    const lip3 = Geom.lerp(center, p3, -(1 - inset) * 2);
+    const lip1 = Geom.lerp(center, fp1, -(1 - inset) * 2);
+    const lip2 = Geom.lerp(center, fp2, -(1 - inset) * 2);
+    const lip3 = Geom.lerp(center, fp3, -(1 - inset) * 2);
 
     const line1_int1 = findLineSegmentIntersection(lip1, lip2, p2, p3);
     const line1_int2 = findLineSegmentIntersection(lip1, lip2, p3, p1);
@@ -68,7 +72,7 @@ export const createSakuraPattern = (
       if (!pt1 || !pt2) return;
 
       if (clipBoundary && clipBoundary.type === "vertical") {
-        const clipped = clipLine(pt1, pt2, clipBoundary.x, clipBoundary.side);
+        const clipped = clipLine(pt1, pt2, clipBoundary.x, clipBoundary.remainSide);
         if (clipped) {
           leaves.push({
             path: Geom.line(clipped[0], clipped[1]),
@@ -94,6 +98,7 @@ export const createSakuraPattern = (
       leafColor,
       skeletonThickness,
       leafThickness,
+      clipPath: Geom.triangle(p1, p2, p3),
     };
   };
 };
@@ -103,17 +108,17 @@ export const createSakuraPattern = (
  * @param p1 線分の端点1
  * @param p2 線分の端点2
  * @param clipX クリップ線のx座標
- * @param side クリップする側（'left' or 'right'）
+ * @param remainSide クリップする側（'left' or 'right'）
  * @returns クリップ後の線分の端点、または null（完全に範囲外の場合）
  */
 function clipLine(
   p1: { x: number; y: number },
   p2: { x: number; y: number },
   clipX: number,
-  side: "left" | "right"
+  remainSide: "left" | "right"
 ): [{ x: number; y: number }, { x: number; y: number }] | null {
-  const keep1 = side === "left" ? p1.x <= clipX : p1.x >= clipX;
-  const keep2 = side === "left" ? p2.x <= clipX : p2.x >= clipX;
+  const keep1 = remainSide === "left" ? p1.x < clipX : p1.x > clipX;
+  const keep2 = remainSide === "left" ? p2.x < clipX : p2.x > clipX;
 
   // 両端点が範囲内
   if (keep1 && keep2) {

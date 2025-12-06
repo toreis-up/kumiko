@@ -4,7 +4,7 @@ export type Point = { x: number; y: number };
 export interface ClipBoundary {
   type: "vertical"; // 垂直線でクリップ
   x: number; // クリップラインのx座標
-  side: "left" | "right"; // どちら側を残すか
+  remainSide: "left" | "right"; // どちら側を残すか
 }
 
 export interface TriangleGeometry {
@@ -12,6 +12,7 @@ export interface TriangleGeometry {
   p2: Point;
   p3: Point;
   center: Point;
+  full: { p1: Point; p2: Point; p3: Point; center: Point };
   partShape?: "FULL" | "HALF_LEFT" | "HALF_RIGHT";
   clipBoundary?: ClipBoundary;
 }
@@ -43,6 +44,7 @@ export type PatternRenderer = (geom: TriangleGeometry) => {
   leafColor?: string;
   skeletonThickness?: number;
   leafThickness?: number;
+  clipPath?: string; // SVG path string for visual clipping boundary
 };
 
 // Common pattern options

@@ -49,7 +49,7 @@ export const createGomaPattern = (
       if (!pt1 || !pt2) return;
 
       if (clipBoundary && clipBoundary.type === "vertical") {
-        const clipped = clipLine(pt1, pt2, clipBoundary.x, clipBoundary.side);
+        const clipped = clipLine(pt1, pt2, clipBoundary.x, clipBoundary.remainSide);
         if (clipped) {
           leaves.push(Geom.line(clipped[0], clipped[1]));
         }
@@ -69,6 +69,7 @@ export const createGomaPattern = (
       leafColor,
       skeletonThickness,
       leafThickness,
+      clipPath: Geom.triangle(p1, p2, p3),
     };
   };
 };
@@ -78,17 +79,17 @@ export const createGomaPattern = (
  * @param p1 線分の端点1
  * @param p2 線分の端点2
  * @param clipX クリップ線のx座標
- * @param side クリップする側（'left' or 'right'）
+ * @param remainSide クリップする側（'left' or 'right'）
  * @returns クリップ後の線分の端点、または null（完全に範囲外の場合）
  */
 function clipLine(
   p1: { x: number; y: number },
   p2: { x: number; y: number },
   clipX: number,
-  side: "left" | "right"
+  remainSide: "left" | "right"
 ): [{ x: number; y: number }, { x: number; y: number }] | null {
-  const keep1 = side === "left" ? p1.x <= clipX : p1.x >= clipX;
-  const keep2 = side === "left" ? p2.x <= clipX : p2.x >= clipX;
+  const keep1 = remainSide === "left" ? p1.x <= clipX : p1.x >= clipX;
+  const keep2 = remainSide === "left" ? p2.x <= clipX : p2.x >= clipX;
 
   // 両端点が範囲内
   if (keep1 && keep2) {

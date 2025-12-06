@@ -72,12 +72,25 @@ export function generateKumikoSVG(
   </style>
   `;
 
-  // Global path collectors - accumulate all paths by style
-  const globalLeafsByStyle = new Map<string, string[]>();
+  // Global path collectors - accumulate all paths by style and clipPath
+  const globalLeafsByStyleAndClip = new Map<string, Map<string, string[]>>();
   const globalSkeletonPaths: string[] = [];
   let globalSkeletonStyle = {
     color: config.colors.skeleton,
     thickness: skeletonThickness,
+  };
+
+  // Clip path registry - maps clipPath string to unique ID
+  const clipPathRegistry = new Map<string, string>();
+  let clipPathCounter = 0;
+
+  const getOrCreateClipPathId = (clipPath: string): string => {
+    if (!clipPathRegistry.has(clipPath)) {
+      const clipId = `clip-${clipPathCounter}`;
+      clipPathRegistry.set(clipPath, clipId);
+      clipPathCounter++;
+    }
+    return clipPathRegistry.get(clipPath)!;
   };
 
   // 2. 描画ループ
@@ -100,15 +113,19 @@ export function generateKumikoSVG(
         // 自動配向 (セグメントごとにリセット)
         const isDownTriangle = (lineIndex + charIndexInSegment) % 2 === 0;
         const triangleDirection = isDownTriangle ? "DOWN" : "UP";
+        const getOppositeDirection = (dir: "UP" | "DOWN") =>
+          dir === "UP" ? "DOWN" : "UP";
+
 
         // 共通描画処理ヘルパー
         const renderTrianglePart = (
           partShape: "FULL" | "HALF_LEFT" | "HALF_RIGHT",
+          direction: "UP" | "DOWN",
           xOffset: number
         ) => {
           const triangleGeometry = Geom.calculateTriangle(
             partShape,
-            triangleDirection,
+            direction,
             xPosition + xOffset,
             yPosition,
             sideLength
@@ -120,6 +137,7 @@ export function generateKumikoSVG(
             leafColor,
             skeletonThickness: patternSkeletonThickness,
             leafThickness: patternLeafThickness,
+            clipPath,
           } = patternRenderer(triangleGeometry);
 
           // パターン固有の値がなければ設定のデフォルト値を使用
@@ -137,7 +155,7 @@ export function generateKumikoSVG(
             thickness: leafThickness,
           };
 
-          // Group leaves by resolved style and add to global collectors
+          // Group leaves by resolved style and clipPath, add to global collectors
           leafPaths.forEach((leaf) => {
             const normalized = normalizeLeafPath(leaf);
             const resolvedStyle = resolveStyle(
@@ -148,10 +166,20 @@ export function generateKumikoSVG(
             const styleKey = getStyleKey(resolvedStyle);
             const className = getOrCreateStyleClass(styleKey);
 
-            if (!globalLeafsByStyle.has(className)) {
-              globalLeafsByStyle.set(className, []);
+            // Get or create clipPath ID (use "none" if no clipPath)
+            const clipId = clipPath ? getOrCreateClipPathId(clipPath) : "none";
+
+            // Ensure style map exists
+            if (!globalLeafsByStyleAndClip.has(className)) {
+              globalLeafsByStyleAndClip.set(className, new Map());
             }
-            globalLeafsByStyle.get(className)!.push(normalized.path);
+            const clipMap = globalLeafsByStyleAndClip.get(className)!;
+
+            // Ensure clip ID array exists
+            if (!clipMap.has(clipId)) {
+              clipMap.set(clipId, []);
+            }
+            clipMap.get(clipId)!.push(normalized.path);
           });
 
           // Add skeleton paths to global collector
@@ -168,15 +196,14 @@ export function generateKumikoSVG(
         };
 
         // 左端
-        if (charIndexInSegment === 0)
-          renderTrianglePart("HALF_LEFT", 0);
+        if (charIndexInSegment === 0) renderTrianglePart("HALF_RIGHT", getOppositeDirection(triangleDirection), 0);
 
         // 本体
-        renderTrianglePart("FULL", 0);
+        renderTrianglePart("FULL", triangleDirection, 0);
 
         // 右端
         if (charIndexInSegment === patternChars.length - 1) {
-          renderTrianglePart("HALF_RIGHT", halfSideLength);
+          renderTrianglePart("HALF_LEFT", getOppositeDirection(triangleDirection), halfSideLength);
           xPosition += halfSideLength; // 右端分進める
         }
 
@@ -195,19 +222,46 @@ export function generateKumikoSVG(
     svgContent += `  </style>\n`;
   }
 
-  // Render all accumulated paths grouped by style
-  // Draw leaves by style class (all paths with same style in one <path> element)
-  globalLeafsByStyle.forEach((paths, className) => {
-    if (paths.length > 0) {
-      svgContent += `  <path class="${className}" d="${paths.join(" ")}" />\n`;
-    }
+  // Add clipPath definitions
+  if (clipPathRegistry.size > 0) {
+    svgContent += `  <defs>\n`;
+    clipPathRegistry.forEach((clipId, clipPathStr) => {
+      svgContent += `    <clipPath id="${clipId}">\n`;
+      svgContent += `      <path d="${clipPathStr}" />\n`;
+      svgContent += `    </clipPath>\n`;
+    });
+    svgContent += `  </defs>\n`;
+  }
+
+  // Render all accumulated paths grouped by style and clipPath
+  // Draw leaves by style class and clipPath
+  globalLeafsByStyleAndClip.forEach((clipMap, className) => {
+    clipMap.forEach((paths, clipId) => {
+      if (paths.length > 0) {
+        if (clipId === "none") {
+          // No clipping
+          svgContent += `  <path class="${className}" d="${paths.join(
+            " "
+          )}" />\n`;
+        } else {
+          // With clipping
+          svgContent += `  <g clip-path="url(#${clipId})">\n`;
+          svgContent += `    <path class="${className}" d="${paths.join(
+            " "
+          )}" />\n`;
+          svgContent += `  </g>\n`;
+        }
+      }
+    });
   });
 
   // Draw all skeleton paths in one <path> element
   if (globalSkeletonPaths.length > 0) {
     svgContent += `  <path class="skeleton" d="${globalSkeletonPaths.join(
       " "
-    )}" style="stroke:${globalSkeletonStyle.color};stroke-width:${globalSkeletonStyle.thickness};" />\n`;
+    )}" style="stroke:${globalSkeletonStyle.color};stroke-width:${
+      globalSkeletonStyle.thickness
+    };" />\n`;
   }
 
   svgContent += `</svg>`;
