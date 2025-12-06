@@ -1,9 +1,10 @@
-import type { KumikoConfig } from "./types";
+import type { KumikoConfig, OutputFormat } from "./types";
 import type { PatternCharacterConfig } from "./types/config";
 import { writeFileSync } from "node:fs";
 import { buildPatternRegistry } from "./pattern-config";
 import { Geom, normalizeLeafPath, resolveStyle, getStyleKey } from "./utils";
 import defaultPatterns from "./default-patterns.json";
+import sharp from "sharp";
 
 /**
  * グリッドデータを基にSVGコンテンツを生成
@@ -63,7 +64,7 @@ export function generateKumikoSVG(
     return styleClassMap.get(styleKey)!;
   };
 
-  let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}" width="${canvasWidth}" height="${canvasHeight}" style="background-color:var(--kumiko-bg, ${config.colors.background})">\n`;
+  let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}" width="${canvasWidth}" height="${canvasHeight}">\n`;
 
   svgContent += `
   <style>
@@ -71,6 +72,9 @@ export function generateKumikoSVG(
     .skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${skeletonThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   `;
+
+  // Add background rectangle
+  svgContent += `  <rect width="${canvasWidth}" height="${canvasHeight}" fill="${config.colors.background}" />\n`;
 
   // Global path collectors - accumulate all paths by style and clipPath
   const globalLeafsByStyleAndClip = new Map<string, Map<string, string[]>>();
@@ -115,7 +119,6 @@ export function generateKumikoSVG(
         const triangleDirection = isDownTriangle ? "DOWN" : "UP";
         const getOppositeDirection = (dir: "UP" | "DOWN") =>
           dir === "UP" ? "DOWN" : "UP";
-
 
         // 共通描画処理ヘルパー
         const renderTrianglePart = (
@@ -196,14 +199,23 @@ export function generateKumikoSVG(
         };
 
         // 左端
-        if (charIndexInSegment === 0) renderTrianglePart("HALF_RIGHT", getOppositeDirection(triangleDirection), 0);
+        if (charIndexInSegment === 0)
+          renderTrianglePart(
+            "HALF_RIGHT",
+            getOppositeDirection(triangleDirection),
+            0
+          );
 
         // 本体
         renderTrianglePart("FULL", triangleDirection, 0);
 
         // 右端
         if (charIndexInSegment === patternChars.length - 1) {
-          renderTrianglePart("HALF_LEFT", getOppositeDirection(triangleDirection), halfSideLength);
+          renderTrianglePart(
+            "HALF_LEFT",
+            getOppositeDirection(triangleDirection),
+            halfSideLength
+          );
           xPosition += halfSideLength; // 右端分進める
         }
 
@@ -274,4 +286,47 @@ export function generateKumikoSVG(
 export function writeKumikoSVG(svgContent: string, outputPath: string): void {
   writeFileSync(outputPath, svgContent);
   console.log(`Generated: ${outputPath}`);
+}
+
+/**
+ * SVG to Image conversion using sharp
+ * Converts SVG string to PNG, JPG, or WebP format
+ */
+export async function convertSVGToImage(
+  svgContent: string,
+  outputPath: string,
+  format: OutputFormat
+): Promise<void> {
+  if (format === "svg") {
+    writeKumikoSVG(svgContent, outputPath);
+    return;
+  }
+
+  try {
+    // Convert SVG to target format using sharp
+    // SVG buffer to image conversion
+    let sharpPipeline = sharp(Buffer.from(svgContent));
+
+    switch (format) {
+      case "png":
+        await sharpPipeline.png().toFile(outputPath);
+        break;
+      case "jpg":
+      case "jpeg":
+        await sharpPipeline
+          .flatten({ background: "#ffffff" })
+          .jpeg({ quality: 90 })
+          .toFile(outputPath);
+        break;
+      case "webp":
+        await sharpPipeline.webp({ quality: 90 }).toFile(outputPath);
+        break;
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+
+    console.log(`Generated: ${outputPath}`);
+  } catch (error) {
+    throw new Error(`Failed to convert SVG to ${format}: ${error}`);
+  }
 }

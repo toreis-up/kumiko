@@ -7,9 +7,12 @@ import type {
   SakuraOptions,
 } from "./pattern";
 
+export type OutputFormat = "svg" | "png" | "jpg" | "jpeg" | "webp";
+
 export interface KumikoConfig {
   sideLength: number;
   outputFilename: string;
+  outputFormat?: OutputFormat;
   colors: { skeleton: string; leaf: string; background: string };
   thickness?: { skeleton?: number; leaf?: number };
 }

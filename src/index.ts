@@ -1,23 +1,45 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { extname, dirname, join } from "node:path";
-import type { KumikoConfig } from "./types";
-import { generateKumikoSVG, writeKumikoSVG } from "./generator";
+import type { KumikoConfig, OutputFormat } from "./types";
+import {
+  generateKumikoSVG,
+  writeKumikoSVG,
+  convertSVGToImage,
+} from "./generator";
 import { parseInputFile } from "./parser";
 import { loadPatternConfig } from "./pattern-config";
 
 /**
- * Generate output filename from input filename
- * Changes the extension to .svg
+ * Detect output format from file extension
  */
-function generateOutputFilename(inputPath: string): string {
+function detectFormatFromExtension(filePath: string): OutputFormat {
+  const ext = extname(filePath).toLowerCase().slice(1);
+  const validFormats: OutputFormat[] = ["svg", "png", "jpg", "jpeg", "webp"];
+
+  if (validFormats.includes(ext as OutputFormat)) {
+    return ext as OutputFormat;
+  }
+
+  return "svg"; // Default to SVG
+}
+
+/**
+ * Generate output filename with specified format
+ */
+function generateOutputFilename(
+  inputPath: string,
+  format: OutputFormat
+): string {
   const dir = dirname(inputPath);
   const filename =
     extname(inputPath) === ""
       ? inputPath
       : inputPath.slice(0, -extname(inputPath).length);
   const baseName = filename.split(/[\\/]/).pop() || "kumiko";
-  return join(dir, `${baseName}.svg`);
+
+  const extension = format === "jpeg" ? "jpg" : format;
+  return join(dir, `${baseName}.${extension}`);
 }
 
 /**
@@ -78,8 +100,15 @@ async function main() {
     .option("output", {
       alias: "o",
       description:
-        "Output SVG file path (if not specified, uses input filename with .svg extension)",
+        "Output file path (if not specified, uses input filename with format extension). Format is auto-detected from extension or --format option",
       type: "string",
+    })
+    .option("format", {
+      alias: "f",
+      description:
+        "Output format (svg, png, jpg, jpeg, webp). If not specified, detected from -o extension or defaults to svg",
+      type: "string",
+      choices: ["svg", "png", "jpg", "jpeg", "webp"],
     })
     .option("repeat-x", {
       description: "Number of times to repeat the pattern horizontally",
@@ -153,8 +182,21 @@ async function main() {
     process.exit(1);
   }
 
-  // Determine output filename
-  const outputFilename = argv.output || generateOutputFilename(argv.input);
+  // Determine output format and filename
+  let outputFormat: OutputFormat = "svg";
+
+  // Priority 1: --format option
+  if (argv.format) {
+    outputFormat = argv.format as OutputFormat;
+  }
+  // Priority 2: -o extension
+  else if (argv.output) {
+    outputFormat = detectFormatFromExtension(argv.output);
+  }
+
+  // Generate output filename based on format
+  const outputFilename =
+    argv.output || generateOutputFilename(argv.input, outputFormat);
 
   // Load pattern configuration if provided
   let patternConfig;
@@ -171,6 +213,7 @@ async function main() {
   const config: KumikoConfig = {
     sideLength: argv.sideLength,
     outputFilename,
+    outputFormat,
     colors: {
       skeleton: argv.skeletonColor,
       leaf: argv.leafColor,
@@ -183,7 +226,18 @@ async function main() {
   };
 
   const svgContent = generateKumikoSVG(grid, config, patternConfig);
-  writeKumikoSVG(svgContent, config.outputFilename);
+
+  // Output based on format
+  try {
+    if (outputFormat === "svg") {
+      writeKumikoSVG(svgContent, config.outputFilename);
+    } else {
+      await convertSVGToImage(svgContent, config.outputFilename, outputFormat);
+    }
+  } catch (error) {
+    console.error(`Error generating output: ${error}`);
+    process.exit(1);
+  }
 }
 
 main().catch(console.error);
