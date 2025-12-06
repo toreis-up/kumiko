@@ -66,12 +66,24 @@ export function parseInputFile(filePath: string): string[] {
  * K | k | k | K
  * A A | G G | A A
  * A | A | A | A
+ *
+ * If a line contains only characters without spaces or pipes,
+ * it will be split into individual characters separated by spaces.
+ * Example: "AAABBB" -> "A A A B B B"
  */
 function parsePlainText(content: string): string[] {
   const lines = content
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"));
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .map((line) => {
+      // Check if line contains spaces or pipes (already formatted)
+      if (line.includes(" ") || line.includes("|")) {
+        return line;
+      }
+      // If it's just a plain string, split into characters
+      return [...line].join(" ");
+    });
 
   if (lines.length === 0) {
     throw new Error(
