@@ -66,10 +66,12 @@ export function generateKumikoSVG(
 
   let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}" width="${canvasWidth}" height="${canvasHeight}">\n`;
 
+  const animationEnabled = config.animation === true;
+
   svgContent += `
   <style>
     :root { --kumiko-skeleton: ${config.colors.skeleton}; --kumiko-leaf: ${config.colors.leaf}; }
-    .skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${skeletonThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    ${animationEnabled ? ".kumiko-stroke { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 420ms ease-in-out; }\n    svg:hover .kumiko-stroke { stroke-dashoffset: 0; }\n    " : ""}.skeleton { stroke: var(--kumiko-skeleton); stroke-width: ${skeletonThickness}; fill: none; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   `;
 
@@ -252,15 +254,17 @@ export function generateKumikoSVG(
       if (paths.length > 0) {
         if (clipId === "none") {
           // No clipping
-          svgContent += `  <path class="${className}" d="${paths.join(
-            " "
-          )}" />\n`;
+          const animationAttrs = animationEnabled
+            ? 'class="kumiko-stroke ' + className + '" pathLength="1"'
+            : `class="${className}"`;
+          svgContent += `  <path ${animationAttrs} d="${paths.join(" ")}" />\n`;
         } else {
           // With clipping
           svgContent += `  <g clip-path="url(#${clipId})">\n`;
-          svgContent += `    <path class="${className}" d="${paths.join(
-            " "
-          )}" />\n`;
+          const animationAttrs = animationEnabled
+            ? 'class="kumiko-stroke ' + className + '" pathLength="1"'
+            : `class="${className}"`;
+          svgContent += `    <path ${animationAttrs} d="${paths.join(" ")}" />\n`;
           svgContent += `  </g>\n`;
         }
       }
@@ -269,7 +273,10 @@ export function generateKumikoSVG(
 
   // Draw all skeleton paths in one <path> element
   if (globalSkeletonPaths.length > 0) {
-    svgContent += `  <path class="skeleton" d="${globalSkeletonPaths.join(
+    const animationAttrs = animationEnabled
+      ? 'class="kumiko-stroke skeleton" pathLength="1"'
+      : 'class="skeleton"';
+    svgContent += `  <path ${animationAttrs} d="${globalSkeletonPaths.join(
       " "
     )}" style="stroke:${globalSkeletonStyle.color};stroke-width:${
       globalSkeletonStyle.thickness

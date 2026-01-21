@@ -15,6 +15,7 @@ export interface KumikoConfig {
   outputFormat?: OutputFormat;
   colors: { skeleton: string; leaf: string; background: string };
   thickness?: { skeleton?: number; leaf?: number };
+  animation?: boolean;
 }
 
 // Pattern character to pattern type mapping - using pattern type IDs

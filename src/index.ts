@@ -155,6 +155,11 @@ async function main() {
         "Leaf stroke thickness (as a multiplier of side-length, e.g., 0.015 for default)",
       type: "number",
     })
+    .option("animation", {
+      description: "Enable stroke hover animation in SVG output",
+      type: "boolean",
+      default: false,
+    })
     .help()
     .alias("help", "h")
     .parse();
@@ -223,6 +228,7 @@ async function main() {
       skeleton: argv.skeletonThickness,
       leaf: argv.leafThickness,
     },
+    animation: argv.animation,
   };
 
   const svgContent = generateKumikoSVG(grid, config, patternConfig);
