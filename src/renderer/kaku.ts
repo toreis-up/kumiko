@@ -1,5 +1,6 @@
 import { PatternRenderer, KakuOptions } from "../types";
 import { Geom } from "../utils";
+import { buildPatternResult } from "./helper";
 
 /**
  * 角麻 (Kaku-Asanoha) パターン生成ロジック
@@ -8,11 +9,7 @@ export const createKakuPattern = (
   options: KakuOptions = {}
 ): PatternRenderer => {
   const {
-    skeletonColor,
-    leafColor,
     ratio = 0.65,
-    skeletonThickness,
-    leafThickness,
   } = options;
 
   return ({ p1, p2, p3, center }) => {
@@ -21,28 +18,27 @@ export const createKakuPattern = (
     const ip2 = Geom.lerp(center, p2, ratio);
     const ip3 = Geom.lerp(center, p3, ratio);
 
-    return {
-      skeleton: [
-        // 外枠
-        Geom.triangle(p1, p2, p3),
-        // 内枠
-        Geom.triangle(ip1, ip2, ip3),
-        // ブリッジ
-        Geom.line(p1, ip1),
-        Geom.line(p2, ip2),
-        Geom.line(p3, ip3),
-      ],
-      leaves: [
-        // 内側の麻の葉
-        Geom.line(center, ip1),
-        Geom.line(center, ip2),
-        Geom.line(center, ip3),
-      ],
-      skeletonColor,
-      leafColor,
-      skeletonThickness,
-      leafThickness,
-      clipPath: Geom.triangle(p1, p2, p3),
-    };
-  };
+    return buildPatternResult(
+      {
+        skeleton: [
+          // 外枠
+          Geom.triangle(p1, p2, p3),
+          // 内枠
+          Geom.triangle(ip1, ip2, ip3),
+          // ブリッジ
+          Geom.line(p1, ip1),
+          Geom.line(p2, ip2),
+          Geom.line(p3, ip3),
+        ],
+        leaves: [
+          // 内側の麻の葉
+          Geom.line(center, ip1),
+          Geom.line(center, ip2),
+          Geom.line(center, ip3),
+        ],
+        clipPath: Geom.triangle(p1, p2, p3),
+      },
+      options
+    );
+  }
 };

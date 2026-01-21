@@ -1,4 +1,5 @@
 import { PatternRenderer, BasePatternOptions } from "../types";
+import { buildPatternResult } from "./helper";
 
 /**
  * 空白 (Blank) パターン生成ロジック
@@ -7,18 +8,10 @@ import { PatternRenderer, BasePatternOptions } from "../types";
 export const createBlankPattern = (
   options: BasePatternOptions = {}
 ): PatternRenderer => {
-  const { skeletonColor, leafColor, skeletonThickness, leafThickness } =
-    options;
-
-  return ({  }) => {
-    return {
-      skeleton: [],
-      leaves: [],
-      skeletonColor,
-      leafColor,
-      skeletonThickness,
-      leafThickness,
-      clipPath: undefined,
-    };
+  return ({ }) => {
+    return buildPatternResult(
+      { skeleton: [], leaves: [] },
+      options
+    )
   };
 };

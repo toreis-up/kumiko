@@ -99,4 +99,98 @@ export const Geom = {
 
     return { p1, p2, p3, center, partShape: shapeType, clipBoundary, full: { p1: fullP1, p2: fullP2, p3: fullP3, center: fullCenter } };
   },
+
+  /**
+   * 線分をクリップ境界で切り取る
+   * @param p1 線分の端点1
+   * @param p2 線分の端点2
+   * @param clipX クリップ線のx座標
+   * @param remainSide クリップする側（'left' or 'right'）
+   * @returns クリップ後の線分の端点、または null（完全に範囲外の場合）
+   */
+  clipLine: (
+    p1: { x: number; y: number },
+    p2: { x: number; y: number },
+    clipX: number,
+    remainSide: "left" | "right",
+  ): [{ x: number; y: number }, { x: number; y: number }] | null => {
+    const keep1 = remainSide === "left" ? p1.x <= clipX : p1.x >= clipX;
+    const keep2 = remainSide === "left" ? p2.x <= clipX : p2.x >= clipX;
+
+    // 両端点が範囲内
+    if (keep1 && keep2) {
+      return [p1, p2];
+    }
+
+    // 両端点が範囲外
+    if (!keep1 && !keep2) {
+      return null;
+    }
+
+    // 交点を計算
+    const dx = p2.x - p1.x;
+    if (Math.abs(dx) < 1e-10) {
+      // 垂直線の場合
+      return null;
+    }
+
+    const t = (clipX - p1.x) / dx;
+    const intersection = {
+      x: clipX,
+      y: p1.y + t * (p2.y - p1.y),
+    };
+
+    // 片方の端点が範囲内、もう片方が範囲外
+    if (keep1) {
+      return [p1, intersection];
+    } else {
+      return [intersection, p2];
+    }
+  },
+
+  
+  /**
+   * 直線（無限）と線分の交点を計算
+   * @param lineP1 直線上の点1
+   * @param lineP2 直線上の点2
+   * @param segP1 線分の端点1
+   * @param segP2 線分の端点2
+   * @returns 交点、または null（交差しない場合）
+   */
+  findLineSegmentIntersection: (
+    lineP1: { x: number; y: number },
+    lineP2: { x: number; y: number },
+    segP1: { x: number; y: number },
+    segP2: { x: number; y: number }
+  ): { x: number; y: number } | null => {
+    const x1 = lineP1.x,
+      y1 = lineP1.y;
+    const x2 = lineP2.x,
+      y2 = lineP2.y;
+    const x3 = segP1.x,
+      y3 = segP1.y;
+    const x4 = segP2.x,
+      y4 = segP2.y;
+
+    const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+    if (Math.abs(denom) < 1e-10) {
+      // 平行
+      return null;
+    }
+
+    const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+    const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+
+    // 線分パラメータ u が [0, 1] の範囲内（線分上にある）
+    if (u >= 0 && u <= 1) {
+      return {
+        x: x1 + t * (x2 - x1),
+        y: y1 + t * (y2 - y1),
+      };
+    }
+
+    return null;
+  }
+
 };
