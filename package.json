@@ -6,7 +6,9 @@
   "main": "./dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsdown src/index.ts"
+    "build": "tsdown src/index.ts",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "bin": {
     "kumiko": "bin/kumiko.mjs"

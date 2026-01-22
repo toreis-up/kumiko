@@ -97,7 +97,15 @@ export const Geom = {
       }
     }
 
-    return { p1, p2, p3, center, partShape: shapeType, clipBoundary, full: { p1: fullP1, p2: fullP2, p3: fullP3, center: fullCenter } };
+    return {
+      p1,
+      p2,
+      p3,
+      center,
+      partShape: shapeType,
+      clipBoundary,
+      full: { p1: fullP1, p2: fullP2, p3: fullP3, center: fullCenter },
+    };
   },
 
   /**
