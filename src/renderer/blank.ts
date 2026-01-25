@@ -8,7 +8,7 @@ import { buildPatternResult } from "./helper";
 export const createBlankPattern = (
   options: BasePatternOptions = {}
 ): PatternRenderer => {
-  return ({ }) => {
+  return () => {
     return buildPatternResult(
       { skeleton: [], leaves: [] },
       options

@@ -1,10 +1,6 @@
 import type {
-  AsanohaOptions,
-  GomaOptions,
-  KakuOptions,
-  BlankOptions,
-  PATTERN_TYPES,
-  SakuraOptions,
+  PatternTypeId,
+  PatternOptionsMap,
 } from "./pattern";
 
 export type OutputFormat = "svg" | "png" | "jpg" | "jpeg" | "webp";
@@ -20,27 +16,9 @@ export interface KumikoConfig {
 
 // Pattern character to pattern type mapping - using pattern type IDs
 export interface PatternCharacterConfig {
-  [charKey: string]:
-    | {
-        type: typeof PATTERN_TYPES.ASANOHA;
-        options?: AsanohaOptions;
-      }
-    | {
-        type: typeof PATTERN_TYPES.GOMA;
-        options?: GomaOptions;
-      }
-    | {
-        type: typeof PATTERN_TYPES.KAKU;
-        options?: KakuOptions;
-      }
-    | {
-        type: typeof PATTERN_TYPES.BLANK;
-        options?: BlankOptions;
-      }
-    | {
-        type: typeof PATTERN_TYPES.SAKURA;
-        options?: SakuraOptions;
-      };
+  [charKey: string]: {
+    [K in PatternTypeId]: {type: K, options: PatternOptionsMap[K]};
+  }[PatternTypeId]
 }
 
 // Full pattern configuration file format

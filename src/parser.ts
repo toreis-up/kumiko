@@ -1,12 +1,33 @@
 import { readFileSync, existsSync } from "node:fs";
 import { extname, resolve } from "node:path";
 
-const SUPPORTED_EXTENSIONS = [".txt", ".csv", ".json"];
+type SupportedExtensions = ".txt" | ".csv" | ".json";
+
+type Parser = (content: string) => string[];
+
+const parserMap: Record<SupportedExtensions, Parser> = {
+  ".txt": parsePlainText,
+  ".csv": parseCSV,
+  ".json": parseJSON,
+};
+
+function getParser(ext: SupportedExtensions): Parser {
+  const parser = parserMap[ext];
+  if (!parser) {
+    throw new Error(`Unsupported file format: ${ext}`);
+  }
+
+  return parser;
+}
+
+function isSupportedExtension(ext: string): ext is SupportedExtensions {
+  return Object.keys(parserMap).includes(ext);
+}
 
 /**
  * Validate input file
  */
-function validateInputFile(filePath: string): void {
+function validateInputFile(filePath: string): SupportedExtensions {
   // Check if file exists
   if (!existsSync(filePath)) {
     throw new Error(`Input file not found: ${filePath}`);
@@ -14,13 +35,11 @@ function validateInputFile(filePath: string): void {
 
   // Check file extension
   const ext = extname(filePath).toLowerCase();
-  if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-    throw new Error(
-      `Unsupported file format: ${ext}\nSupported formats: ${SUPPORTED_EXTENSIONS.join(
-        ", "
-      )}`
-    );
+  if (!isSupportedExtension(ext)) {
+    throw new Error(`Unsupported input file format: ${ext}`);
   }
+
+  return ext;
 }
 
 /**
@@ -29,9 +48,8 @@ function validateInputFile(filePath: string): void {
  */
 export function parseInputFile(filePath: string): string[] {
   // Validate file before reading
-  validateInputFile(filePath);
+  const fileExt = validateInputFile(filePath);
 
-  const ext = extname(filePath).toLowerCase();
   const absolutePath = resolve(filePath);
 
   let content: string;
@@ -50,14 +68,35 @@ export function parseInputFile(filePath: string): string[] {
     throw new Error(`Input file is empty: ${filePath}`);
   }
 
-  if (ext === ".json") {
-    return parseJSON(content);
-  } else if (ext === ".csv") {
-    return parseCSV(content);
-  } else {
-    // Default: .txt or any other supported extension
-    return parsePlainText(content);
-  }
+  const parser = getParser(fileExt);
+  return parser(content);
+}
+
+const splitLines = (content: string): string[] =>
+  content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#"));
+
+function isFormattedLine(line: string): boolean {
+  const segments = line.split("|").map((s) => s.trim());
+  return segments.every((seg) => {
+    if (seg.length === 0) return true;
+    const tokens = seg.split(/\s+/).filter(Boolean);
+    return tokens.every((t) => t.length === 1);
+  });
+}
+
+function normalizeLine(line: string): string {
+  if (isFormattedLine(line)) return line;
+
+  return line
+    .split("|")
+    .map((seg) => {
+      const compact = seg.trim().split(/\s+/).join("");
+      return compact.length ? [...compact].join(" ") : "";
+    })
+    .join(" | ");
 }
 
 /**
@@ -72,18 +111,8 @@ export function parseInputFile(filePath: string): string[] {
  * Example: "AAABBB" -> "A A A B B B"
  */
 function parsePlainText(content: string): string[] {
-  const lines = content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"))
-    .map((line) => {
-      // Check if line contains spaces or pipes (already formatted)
-      if (line.includes(" ") || line.includes("|")) {
-        return line;
-      }
-      // If it's just a plain string, split into characters
-      return [...line].join(" ");
-    });
+  const lines = splitLines(content)
+    .map(line => normalizeLine(line));
 
   if (lines.length === 0) {
     throw new Error(
@@ -119,7 +148,7 @@ function parseJSON(content: string): string[] {
     if (data.length === 0) {
       throw new Error("JSON array is empty");
     }
-    return data as string[];
+    return data.map(line => normalizeLine(String(line)));
   } else if (data && typeof data === "object" && "grid" in data) {
     const grid = (data as { grid: unknown }).grid;
     if (!Array.isArray(grid)) {
@@ -128,7 +157,8 @@ function parseJSON(content: string): string[] {
     if (grid.length === 0) {
       throw new Error("'grid' array is empty");
     }
-    return grid as string[];
+    const validatedGrid = grid.map(line => normalizeLine(String(line)));
+    return validatedGrid;
   } else {
     throw new Error(
       "Invalid JSON format. Expected array or object with 'grid' property"
@@ -145,16 +175,13 @@ function parseJSON(content: string): string[] {
  * A,A,A,A
  */
 function parseCSV(content: string): string[] {
-  const lines = content
-    .split("\n")
+  const lines = splitLines(content)
     .map((line) => {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) return "";
       // Convert CSV format to internal format with pipes
-      return trimmed
+      return normalizeLine(line
         .split(",")
         .map((cell) => cell.trim())
-        .join(" | ");
+        .join(" | "));
     })
     .filter((line) => line.length > 0);
 

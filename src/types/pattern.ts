@@ -99,11 +99,17 @@ export interface PatternFactoryMetadata<
   factory: PatternFactory<T>;
 }
 
+export type PatternOptionsMap = {
+  [PATTERN_TYPES.ASANOHA]: AsanohaOptions;
+  [PATTERN_TYPES.GOMA]: GomaOptions;
+  [PATTERN_TYPES.KAKU]: KakuOptions;
+  [PATTERN_TYPES.BLANK]: BlankOptions;
+  [PATTERN_TYPES.SAKURA]: SakuraOptions;
+};
+
 // Strict pattern factory registry type - indexed by ID
-export interface PatternFactoryRegistry {
-  [PATTERN_TYPES.ASANOHA]: PatternFactoryMetadata<AsanohaOptions>;
-  [PATTERN_TYPES.GOMA]: PatternFactoryMetadata<GomaOptions>;
-  [PATTERN_TYPES.KAKU]: PatternFactoryMetadata<KakuOptions>;
-  [PATTERN_TYPES.BLANK]: PatternFactoryMetadata<BlankOptions>;
-  [PATTERN_TYPES.SAKURA]: PatternFactoryMetadata<SakuraOptions>;
-}
+export type PatternFactoryRegistry = {
+  [key in PatternTypeId]: PatternFactoryMetadata<PatternOptionsMap[key]> & {
+    id: key
+  };
+};
